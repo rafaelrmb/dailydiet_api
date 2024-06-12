@@ -3,6 +3,7 @@ import 'knex';
 declare module 'knex/types/tables' {
   interface Meal {
     name: string;
+    userId: string;
     description: string;
     mealDateTime: string;
     isIncludedOnDiet: boolean;
@@ -12,6 +13,10 @@ declare module 'knex/types/tables' {
     id: string;
     name: string;
     created_at: string;
-    mealsList: Meal[];
+  }
+
+  interface Tables {
+    users: User;
+    meals: Meal;
   }
 }
