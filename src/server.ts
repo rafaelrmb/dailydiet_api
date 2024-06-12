@@ -1,13 +1,16 @@
 import Fastify from 'fastify';
 import { env } from './env';
+import { usersRoutes } from './routes/users';
 
-const fastify = Fastify({
+const app = Fastify({
   logger: true,
 });
 
-fastify.listen({ port: env.PORT }, (err, address) => {
+app.register(usersRoutes);
+
+app.listen({ port: env.PORT }, (err, address) => {
   if (err) {
-    fastify.log.error(err);
+    app.log.error(err);
     process.exit(1);
   }
 
