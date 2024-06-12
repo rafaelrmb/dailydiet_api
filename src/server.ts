@@ -1,12 +1,5 @@
-import Fastify from 'fastify';
+import { app } from './app';
 import { env } from './env';
-import { usersRoutes } from './routes/users';
-
-const app = Fastify({
-  logger: true,
-});
-
-app.register(usersRoutes);
 
 app.listen({ port: env.PORT }, (err, address) => {
   if (err) {
