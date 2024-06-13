@@ -2,11 +2,12 @@ import 'knex';
 
 declare module 'knex/types/tables' {
   interface Meal {
+    id: string;
     name: string;
-    userId: string;
+    user_id: string;
     description: string;
-    mealDateTime: string;
-    isIncludedOnDiet: boolean;
+    meal_date_time: string;
+    is_included_on_diet: boolean;
   }
 
   interface User {
