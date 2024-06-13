@@ -35,6 +35,27 @@ describe('Users routes', () => {
         }),
       ]);
     });
+
+    it('should return a user with a specific ID', async () => {
+      const createUserResponse = await createNewUser('test test test');
+      const { id } = createUserResponse.body[0];
+
+      const userFoundByIdResponse = await request(app.server)
+        .get(`/users/${id}`)
+        .expect(200);
+
+      expect(userFoundByIdResponse.body).toEqual(
+        expect.objectContaining({
+          id,
+        }),
+      );
+    });
+
+    it('should return status code 403 for not found user ID', async () => {
+      await request(app.server)
+        .get(`/users/659a897b-8b96-4752-ae22-79d4a3f05c1e`)
+        .expect(403);
+    });
   });
 
   describe('POST methods', () => {
