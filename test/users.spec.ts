@@ -3,6 +3,12 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { app } from '../src/app';
 
+async function createNewUser(name: string) {
+  return await request(app.server).post('/users').send({
+    name,
+  });
+}
+
 describe('Users routes', () => {
   beforeAll(async () => {
     await app.ready();
@@ -19,9 +25,7 @@ describe('Users routes', () => {
 
   describe('GET methods', () => {
     it('should return the list of users', async () => {
-      await request(app.server).post('/users').send({
-        name: 'Testing name',
-      });
+      await createNewUser('Testing name');
 
       const getUsersResponse = await request(app.server).get('/users');
 
@@ -35,11 +39,11 @@ describe('Users routes', () => {
 
   describe('POST methods', () => {
     it('should be able to create users', async () => {
-      const createUserResponse = await request(app.server).post('/users').send({
-        name: 'Testing name',
-      });
+      const createUserResponse = await createNewUser('Testing name');
 
       expect(createUserResponse.body[0].name).toBe('Testing name');
     });
+
+    it('should not create a user if the req body is empty', async () => {});
   });
 });
