@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { mealsRoutes } from './routes/meals';
 import { usersRoutes } from './routes/users';
 
 export const app = Fastify({
@@ -7,4 +8,8 @@ export const app = Fastify({
 
 app.register(usersRoutes, {
   prefix: 'users',
+});
+
+app.register(mealsRoutes, {
+  prefix: 'meals',
 });
