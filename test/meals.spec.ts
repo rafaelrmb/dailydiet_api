@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { execSync } from 'child_process';
 import { User } from 'knex/types/tables';
 import request from 'supertest';
@@ -15,6 +16,16 @@ import { app } from '../src/app';
 async function createNewUser() {
   return await request(app.server).post('/users').send({
     name: 'Test created user',
+  });
+}
+
+async function createNewMeal() {
+  return await request(app.server).post('/meals').send({
+    name: 'Test meal',
+    description: 'Test meal description',
+    meal_date_time: TIME_NOW,
+    is_included_on_diet: true,
+    user_id: currentUser.id,
   });
 }
 
@@ -40,13 +51,7 @@ describe('Meals routes', () => {
 
   describe('POST methods', () => {
     it('should create a new meal related to a specific user', async () => {
-      const newMealResponse = await request(app.server).post('/meals').send({
-        name: 'Test meal',
-        description: 'Test meal description',
-        meal_date_time: TIME_NOW,
-        is_included_on_diet: true,
-        user_id: currentUser.id,
-      });
+      const newMealResponse = await createNewMeal();
 
       expect(newMealResponse.status).toBe(201);
 
@@ -57,6 +62,26 @@ describe('Meals routes', () => {
           meal_date_time: TIME_NOW.toISOString(),
           is_included_on_diet: 1,
           user_id: currentUser.id,
+        }),
+      ]);
+    });
+  });
+
+  describe('GET methods', () => {
+    it('should return a list of meals for a specific user', async () => {
+      const { id, user_id } = (await createNewMeal()).body[0];
+
+      const listOfMealsResponse = await request(app.server)
+        .get('/meals')
+        .query({
+          user_id: currentUser.id,
+        })
+        .expect(200);
+
+      expect(listOfMealsResponse.body.meals).toEqual([
+        expect.objectContaining({
+          id,
+          user_id,
         }),
       ]);
     });
