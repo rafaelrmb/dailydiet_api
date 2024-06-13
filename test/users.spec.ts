@@ -3,7 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { app } from '../src/app';
 
-async function createNewUser(name: string) {
+async function createNewUser(name?: string) {
   return await request(app.server).post('/users').send({
     name,
   });
@@ -44,6 +44,10 @@ describe('Users routes', () => {
       expect(createUserResponse.body[0].name).toBe('Testing name');
     });
 
-    it('should not create a user if the req body is empty', async () => {});
+    it('should not create a user if the req body is empty or invalid', async () => {
+      const invalidUserCreatedResponse = await createNewUser();
+      console.log(invalidUserCreatedResponse.body);
+      expect(invalidUserCreatedResponse.status).toBe(400);
+    });
   });
 });
