@@ -9,6 +9,24 @@ export async function usersRoutes(app: FastifyInstance) {
     return res.status(200).send({ users });
   });
 
+  app.get('/:id', async (req, res) => {
+    const getUserByIdRequestSchema = z
+      .object({
+        id: z.string().uuid(),
+      })
+      .parse(req.params);
+
+    const { id } = getUserByIdRequestSchema;
+
+    const foundUser = await knex('users').where('id', id).first();
+
+    if (!foundUser) {
+      return res.status(403).send();
+    }
+
+    return res.status(200).send(foundUser);
+  });
+
   app.post('/', async (req, res) => {
     const createUserBodySchema = z
       .object({
