@@ -1,6 +1,14 @@
 import { execSync } from 'node:child_process';
 import request from 'supertest';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 import { app } from '../src/app';
 
 async function createNewUser(name?: string) {
@@ -70,5 +78,13 @@ describe('Users routes', () => {
       console.log(invalidUserCreatedResponse.body);
       expect(invalidUserCreatedResponse.status).toBe(400);
     });
+  });
+
+  afterEach(() => {
+    try {
+      execSync('npm run knex migrate:rollback --all');
+    } catch (error) {
+      console.error('Rollback error:', error);
+    }
   });
 });
