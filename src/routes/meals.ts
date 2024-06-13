@@ -36,4 +36,21 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     return res.status(201).send(meal);
   });
+
+  app.get('/', async (req, res) => {
+    const requestBodySchema = z
+      .object({
+        user_id: z.string().uuid(),
+      })
+      .parse(req.query);
+
+    const { user_id: userId } = requestBodySchema;
+
+    const listOfMealsCreatedByUser = await knex('meals').where(
+      'user_id',
+      userId,
+    );
+
+    return res.status(200).send({ meals: listOfMealsCreatedByUser });
+  });
 }
