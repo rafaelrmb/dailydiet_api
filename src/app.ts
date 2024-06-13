@@ -5,4 +5,6 @@ export const app = Fastify({
   logger: true,
 });
 
-app.register(usersRoutes);
+app.register(usersRoutes, {
+  prefix: 'users',
+});
