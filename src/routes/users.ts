@@ -10,11 +10,19 @@ export async function usersRoutes(app: FastifyInstance) {
   });
 
   app.post('/', async (req, res) => {
-    const createUserBodySchema = z.object({
-      name: z.string(),
-    });
+    const createUserBodySchema = z
+      .object({
+        name: z.string(),
+      })
+      .safeParse(req.body);
 
-    const { name } = createUserBodySchema.parse(req.body);
+    if (createUserBodySchema.error) {
+      return res
+        .status(400)
+        .send({ message: 'A name must be provided to create a new user' });
+    }
+
+    const { name } = createUserBodySchema.data;
 
     const user = await knex('users')
       .insert({
