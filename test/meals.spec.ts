@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import { execSync } from 'child_process';
+import { randomUUID } from 'crypto';
 import { User } from 'knex/types/tables';
 import request from 'supertest';
 import {
@@ -14,19 +15,25 @@ import {
 import { app } from '../src/app';
 
 async function createNewUser() {
-  return await request(app.server).post('/users').send({
-    name: 'Test created user',
-  });
+  return await request(app.server)
+    .post('/users')
+    .send({
+      name: 'Test created user',
+    })
+    .expect(201);
 }
 
 async function createNewMeal() {
-  return await request(app.server).post('/meals').send({
-    name: 'Test meal',
-    description: 'Test meal description',
-    meal_date_time: TIME_NOW,
-    is_included_on_diet: true,
-    user_id: currentUser.id,
-  });
+  return await request(app.server)
+    .post('/meals')
+    .send({
+      name: 'Test meal',
+      description: 'Test meal description',
+      meal_date_time: TIME_NOW,
+      is_included_on_diet: true,
+      user_id: currentUser.id,
+    })
+    .expect(201);
 }
 
 let TIME_NOW: Date;
@@ -84,6 +91,39 @@ describe('Meals routes', () => {
           user_id,
         }),
       ]);
+    });
+
+    it('should return a specific meal by id', async () => {
+      await createNewMeal();
+      const { id: idSeconMealCreated, user_id: userIdSecondMealCreated } = (
+        await createNewMeal()
+      ).body[0];
+
+      const secondMealCreatedResponse = await request(app.server)
+        .get(`/meals/${idSeconMealCreated}`)
+        .query({ user_id: userIdSecondMealCreated })
+        .expect(200);
+
+      expect(secondMealCreatedResponse.body).toEqual([
+        expect.objectContaining({
+          id: idSeconMealCreated,
+          user_id: userIdSecondMealCreated,
+        }),
+      ]);
+    });
+
+    it('should not return a meal from a different user', async () => {
+      const { id, user_id } = (await createNewMeal()).body[0];
+
+      await request(app.server)
+        .get(`/meals/${id}`)
+        .query({ user_id })
+        .expect(200);
+
+      await request(app.server)
+        .get(`/meals/${id}`)
+        .query({ user_id: randomUUID() })
+        .expect(404);
     });
   });
 
