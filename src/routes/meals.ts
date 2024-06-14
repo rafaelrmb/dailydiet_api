@@ -81,4 +81,31 @@ export async function mealsRoutes(app: FastifyInstance) {
 
     return res.status(200).send(mealFoundByUserAndMealId);
   });
+
+  app.delete('/:id', async (req, res) => {
+    const reqParamsSchema = z
+      .object({
+        id: z.string().uuid(),
+      })
+      .parse(req.params);
+
+    const reqQuerySchema = z
+      .object({
+        user_id: z.string().uuid(),
+      })
+      .parse(req.query);
+
+    const { id: mealId } = reqParamsSchema;
+    const { user_id: userId } = reqQuerySchema;
+
+    const sucessfulDeletionObject = await knex('meals')
+      .where({ id: mealId, user_id: userId })
+      .del();
+
+    if (!sucessfulDeletionObject) {
+      return res.status(404).send();
+    }
+
+    return res.status(204).send(sucessfulDeletionObject);
+  });
 }
