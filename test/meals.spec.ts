@@ -127,6 +127,36 @@ describe('Meals routes', () => {
     });
   });
 
+  describe('DELETE method', () => {
+    it('should delete a meal by ID', async () => {
+      const { id, user_id } = (await createNewMeal()).body[0];
+
+      await request(app.server)
+        .delete(`/meals/${id}`)
+        .query({ user_id })
+        .expect(204);
+
+      await request(app.server)
+        .get(`/meals/${id}`)
+        .query({ user_id })
+        .expect(404);
+    });
+
+    it('should not be able to delete another users meals', async () => {
+      const { id, user_id } = (await createNewMeal()).body[0];
+
+      await request(app.server)
+        .delete(`/meals/${id}`)
+        .query({ user_id: randomUUID() })
+        .expect(404);
+
+      await request(app.server)
+        .get(`/meals/${id}`)
+        .query({ user_id })
+        .expect(200);
+    });
+  });
+
   afterEach(() => {
     try {
       execSync('npm run knex migrate:rollback --all');
