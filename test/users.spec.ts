@@ -75,7 +75,7 @@ describe('Users routes', () => {
 
     it('should not create a user if the req body is empty or invalid', async () => {
       const invalidUserCreatedResponse = await createNewUser();
-      console.log(invalidUserCreatedResponse.body);
+
       expect(invalidUserCreatedResponse.status).toBe(400);
     });
   });
