@@ -2,110 +2,102 @@ import { randomUUID } from 'crypto';
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { knex } from '../database';
+import { validateSchema } from '../middlewares/paramsSchemaValidator';
+import {
+  mealParamSchema,
+  mealQuerySchema,
+  newMealBodySchema,
+} from '../schemas/mealSchemas';
 
 export async function mealsRoutes(app: FastifyInstance) {
-  app.post('/', async (req, res) => {
-    const newMealBodySchema = z
-      .object({
-        name: z.string(),
-        description: z.string(),
-        meal_date_time: z.string().datetime(),
-        is_included_on_diet: z.boolean(),
-        user_id: z.string().uuid(),
-      })
-      .parse(req.body);
-
-    const {
-      description,
-      is_included_on_diet: isIncludedOnDiet,
-      meal_date_time: mealDateTime,
-      name,
-      user_id: userId,
-    } = newMealBodySchema;
-
-    const meal = await knex('meals')
-      .insert({
-        id: randomUUID(),
+  app.post(
+    '/',
+    { preHandler: [validateSchema(newMealBodySchema, 'body')] },
+    async (req, res) => {
+      const {
         description,
         is_included_on_diet: isIncludedOnDiet,
         meal_date_time: mealDateTime,
         name,
         user_id: userId,
-      })
-      .returning('*');
+      } = req.body as z.infer<typeof newMealBodySchema>;
 
-    return res.status(201).send(meal);
-  });
+      const meal = await knex('meals')
+        .insert({
+          id: randomUUID(),
+          description,
+          is_included_on_diet: isIncludedOnDiet,
+          meal_date_time: mealDateTime,
+          name,
+          user_id: userId,
+        })
+        .returning('*');
 
-  app.get('/', async (req, res) => {
-    const requestBodySchema = z
-      .object({
-        user_id: z.string().uuid(),
-      })
-      .parse(req.query);
+      return res.status(201).send(meal);
+    },
+  );
 
-    const { user_id: userId } = requestBodySchema;
+  app.get(
+    '/',
+    { preHandler: validateSchema(mealQuerySchema, 'query') },
+    async (req, res) => {
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-    const listOfMealsCreatedByUser = await knex('meals').where(
-      'user_id',
-      userId,
-    );
+      const listOfMealsCreatedByUser = await knex('meals').where(
+        'user_id',
+        userId,
+      );
 
-    return res.status(200).send({ meals: listOfMealsCreatedByUser });
-  });
+      return res.status(200).send({ meals: listOfMealsCreatedByUser });
+    },
+  );
 
-  app.get('/:id', async (req, res) => {
-    const reqParamsSchema = z
-      .object({
-        id: z.string().uuid(),
-      })
-      .parse(req.params);
+  app.get(
+    '/:id',
+    {
+      preHandler: [
+        validateSchema(mealParamSchema, 'params'),
+        validateSchema(mealQuerySchema, 'query'),
+      ],
+    },
+    async (req, res) => {
+      const { id: mealId } = req.params as z.infer<typeof mealParamSchema>;
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-    const reqQuerySchema = z
-      .object({
-        user_id: z.string().uuid(),
-      })
-      .parse(req.query);
+      const mealFoundByUserAndMealId = await knex('meals').where({
+        id: mealId,
+        user_id: userId,
+      });
 
-    const { id: mealId } = reqParamsSchema;
-    const { user_id: userId } = reqQuerySchema;
+      if (!mealFoundByUserAndMealId.length) {
+        return res.status(404).send();
+      }
 
-    const mealFoundByUserAndMealId = await knex('meals').where({
-      id: mealId,
-      user_id: userId,
-    });
+      return res.status(200).send(mealFoundByUserAndMealId);
+    },
+  );
 
-    if (!mealFoundByUserAndMealId.length) {
-      return res.status(404).send();
-    }
+  app.delete(
+    '/:id',
+    {
+      preHandler: [
+        validateSchema(mealParamSchema, 'params'),
+        validateSchema(mealQuerySchema, 'query'),
+      ],
+    },
+    async (req, res) => {
+      const { id: mealId } = req.params as z.infer<typeof mealParamSchema>;
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-    return res.status(200).send(mealFoundByUserAndMealId);
-  });
+      const sucessfulDeletionObject = await knex('meals')
+        .where({ id: mealId, user_id: userId })
+        .del();
 
-  app.delete('/:id', async (req, res) => {
-    const reqParamsSchema = z
-      .object({
-        id: z.string().uuid(),
-      })
-      .parse(req.params);
+      if (!sucessfulDeletionObject) {
+        return res.status(404).send();
+      }
 
-    const reqQuerySchema = z
-      .object({
-        user_id: z.string().uuid(),
-      })
-      .parse(req.query);
-
-    const { id: mealId } = reqParamsSchema;
-    const { user_id: userId } = reqQuerySchema;
-
-    const sucessfulDeletionObject = await knex('meals')
-      .where({ id: mealId, user_id: userId })
-      .del();
-
-    if (!sucessfulDeletionObject) {
-      return res.status(404).send();
-    }
-
-    return res.status(204).send(sucessfulDeletionObject);
-  });
+      return res.status(204).send(sucessfulDeletionObject);
+    },
+  );
 }
