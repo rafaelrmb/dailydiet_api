@@ -96,18 +96,18 @@ describe('Meals routes', () => {
 
     it('should return a specific meal by id', async () => {
       await createNewMeal();
-      const { id: idSeconMealCreated, user_id: userIdSecondMealCreated } = (
+      const { id: idSecondMealCreated, user_id: userIdSecondMealCreated } = (
         await createNewMeal()
       ).body[0];
 
       const secondMealCreatedResponse = await request(app.server)
-        .get(`/meals/${idSeconMealCreated}`)
+        .get(`/meals/${idSecondMealCreated}`)
         .query({ user_id: userIdSecondMealCreated })
         .expect(200);
 
       expect(secondMealCreatedResponse.body).toEqual([
         expect.objectContaining({
-          id: idSeconMealCreated,
+          id: idSecondMealCreated,
           user_id: userIdSecondMealCreated,
         }),
       ]);
