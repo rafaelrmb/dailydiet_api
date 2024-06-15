@@ -24,7 +24,7 @@ export async function mealsRoutes(app: FastifyInstance) {
         user_id: userId,
       } = req.body as z.infer<typeof newMealBodySchema>;
 
-      const meal = await knex('meals')
+      const meal = await knex<Meal>('meals')
         .insert({
           id: randomUUID(),
           description,
@@ -45,7 +45,7 @@ export async function mealsRoutes(app: FastifyInstance) {
     async (req, res) => {
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-      const listOfMealsCreatedByUser = await knex('meals').where(
+      const listOfMealsCreatedByUser = await knex<Meal>('meals').where(
         'user_id',
         userId,
       );
@@ -70,7 +70,7 @@ export async function mealsRoutes(app: FastifyInstance) {
       const { id: mealId } = req.params as z.infer<typeof mealParamSchema>;
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-      const mealFoundByUserAndMealId = await knex('meals').where({
+      const mealFoundByUserAndMealId = await knex<Meal>('meals').where({
         id: mealId,
         user_id: userId,
       });
@@ -95,7 +95,7 @@ export async function mealsRoutes(app: FastifyInstance) {
       const { id: mealId } = req.params as z.infer<typeof mealParamSchema>;
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-      const sucessfulDeletionObject = await knex('meals')
+      const sucessfulDeletionObject = await knex<Meal>('meals')
         .where({ id: mealId, user_id: userId })
         .del();
 
@@ -126,7 +126,7 @@ export async function mealsRoutes(app: FastifyInstance) {
         name,
       } = req.body as z.infer<typeof updateMealBodySchema>;
 
-      const updatedMealResponse = await knex('meals')
+      const updatedMealResponse = await knex<Meal>('meals')
         .where({ id, user_id: userId })
         .update({
           description,
@@ -150,7 +150,7 @@ export async function mealsRoutes(app: FastifyInstance) {
       let currentStreak = 0;
       let highestStreak = 0;
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
-      const allMealsList = await knex('meals').where('user_id', userId);
+      const allMealsList = await knex<Meal>('meals').where('user_id', userId);
 
       if (!allMealsList.length) {
         return res.status(404).send();
