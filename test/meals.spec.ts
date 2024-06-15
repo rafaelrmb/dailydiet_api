@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
+import { faker } from '@faker-js/faker';
 import { execSync } from 'child_process';
 import { randomUUID } from 'crypto';
-import { User } from 'knex/types/tables';
+import { Meal, User } from 'knex/types/tables';
 import request from 'supertest';
 import {
   afterAll,
@@ -142,7 +143,7 @@ describe('Meals routes', () => {
         .expect(404);
     });
 
-    it('should not be able to delete another users meals', async () => {
+    it('should not be able to delete other users meals', async () => {
       const { id, user_id } = (await createNewMeal()).body[0];
 
       await request(app.server)
@@ -154,6 +155,51 @@ describe('Meals routes', () => {
         .get(`/meals/${id}`)
         .query({ user_id })
         .expect(200);
+    });
+  });
+
+  describe('PUT method', () => {
+    it('should edit a meal by ID', async () => {
+      const newMealCreated: Meal = (await createNewMeal()).body[0];
+      const updatedMeal: Omit<Meal, 'id' | 'user_id'> = {
+        description: faker.commerce.productDescription(),
+        name: faker.commerce.productName(),
+        is_included_on_diet: faker.number.int({ max: 1 }),
+        meal_date_time: faker.date.recent().toISOString(),
+      };
+      const { id, user_id } = newMealCreated;
+
+      await request(app.server)
+        .put(`/meals/${id}`)
+        .query({ user_id })
+        .send(updatedMeal)
+        .expect(204);
+
+      const updatedMealResponse = await request(app.server)
+        .get(`/meals/${id}`)
+        .query({ user_id })
+        .expect(200);
+
+      expect(updatedMealResponse.body[0]).toEqual(
+        expect.objectContaining(updatedMeal),
+      );
+    });
+
+    it('should not be able to edit other users meals', async () => {
+      const newMealCreated: Meal = (await createNewMeal()).body[0];
+      const updatedMeal: Omit<Meal, 'id' | 'user_id'> = {
+        description: faker.commerce.productDescription(),
+        name: faker.commerce.productName(),
+        is_included_on_diet: faker.number.int({ max: 1 }),
+        meal_date_time: faker.date.recent().toISOString(),
+      };
+      const { id } = newMealCreated;
+
+      await request(app.server)
+        .put(`/meals/${id}`)
+        .query({ user_id: randomUUID() })
+        .send(updatedMeal)
+        .expect(404);
     });
   });
 
