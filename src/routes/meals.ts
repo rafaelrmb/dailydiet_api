@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { FastifyInstance } from 'fastify';
+import { Meal } from 'knex/types/tables';
 import { z } from 'zod';
 import { knex } from '../database';
 import { validateSchema } from '../middlewares/paramsSchemaValidator';
@@ -48,6 +49,10 @@ export async function mealsRoutes(app: FastifyInstance) {
         'user_id',
         userId,
       );
+
+      if (!listOfMealsCreatedByUser.length) {
+        return res.status(404).send();
+      }
 
       return res.status(200).send({ meals: listOfMealsCreatedByUser });
     },
@@ -147,6 +152,10 @@ export async function mealsRoutes(app: FastifyInstance) {
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
       const allMealsList = await knex('meals').where('user_id', userId);
 
+      if (!allMealsList.length) {
+        return res.status(404).send();
+      }
+
       allMealsList.forEach((meal) => {
         meal.is_included_on_diet ? currentStreak++ : (currentStreak = 0);
 
@@ -165,7 +174,9 @@ export async function mealsRoutes(app: FastifyInstance) {
     async (req, res) => {
       const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
 
-      const [numberOfMealsSummary] = await knex('meals')
+      const numberOfMealsSummary: Record<string, number>[] = await knex<Meal>(
+        'meals',
+      )
         .where('user_id', userId)
         .select([
           knex.raw('COUNT(id) AS totalNumberOfMeals'),
@@ -176,6 +187,11 @@ export async function mealsRoutes(app: FastifyInstance) {
             'COUNT(CASE WHEN NOT is_included_on_diet THEN 1 ELSE NULL END) AS numberOfMealsOffDiet',
           ),
         ]);
+
+      if (!numberOfMealsSummary[0].totalNumberOfMeals) {
+        console.log('aqui 3');
+        return res.status(404).send();
+      }
 
       return res.status(200).send(numberOfMealsSummary);
     },
