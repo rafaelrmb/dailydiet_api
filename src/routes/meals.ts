@@ -156,4 +156,28 @@ export async function mealsRoutes(app: FastifyInstance) {
       return res.status(200).send({ highestStreak, currentStreak });
     },
   );
+
+  app.get(
+    '/totals',
+    {
+      preHandler: [validateSchema(mealQuerySchema, 'query')],
+    },
+    async (req, res) => {
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
+
+      const [numberOfMealsSummary] = await knex('meals')
+        .where('user_id', userId)
+        .select([
+          knex.raw('COUNT(id) AS totalNumberOfMeals'),
+          knex.raw(
+            'COUNT(CASE WHEN is_included_on_diet THEN 1 ELSE NULL END) AS numberOfMealsOnDiet',
+          ),
+          knex.raw(
+            'COUNT(CASE WHEN NOT is_included_on_diet THEN 1 ELSE NULL END) AS numberOfMealsOffDiet',
+          ),
+        ]);
+
+      return res.status(200).send(numberOfMealsSummary);
+    },
+  );
 }
