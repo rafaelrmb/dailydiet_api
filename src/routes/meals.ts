@@ -137,4 +137,23 @@ export async function mealsRoutes(app: FastifyInstance) {
       return res.status(204).send();
     },
   );
+
+  app.get(
+    '/streak',
+    { preHandler: [validateSchema(mealQuerySchema, 'query')] },
+    async (req, res) => {
+      let currentStreak = 0;
+      let highestStreak = 0;
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
+      const allMealsList = await knex('meals').where('user_id', userId);
+
+      allMealsList.forEach((meal) => {
+        meal.is_included_on_diet ? currentStreak++ : (currentStreak = 0);
+
+        if (highestStreak < currentStreak) highestStreak = currentStreak;
+      });
+
+      return res.status(200).send({ highestStreak, currentStreak });
+    },
+  );
 }
