@@ -139,6 +139,25 @@ describe('Meals routes', () => {
 
       expect(response.body).toEqual({ highestStreak: 2, currentStreak: 0 });
     });
+
+    it('should return the summary of meals by user', async () => {
+      await createNewMeal();
+      await createNewMeal();
+      await createNewMeal(false);
+      await createNewMeal();
+      await createNewMeal(false);
+
+      const summaryOfMealsResponse = await request(app.server)
+        .get('/meals/totals')
+        .query({ user_id: currentUser.id })
+        .expect(200);
+
+      expect(summaryOfMealsResponse.body).toEqual({
+        totalNumberOfMeals: 5,
+        numberOfMealsOnDiet: 3,
+        numberOfMealsOffDiet: 2,
+      });
+    });
   });
 
   describe('DELETE method', () => {
