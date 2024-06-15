@@ -7,6 +7,7 @@ import {
   mealParamSchema,
   mealQuerySchema,
   newMealBodySchema,
+  updateMealBodySchema,
 } from '../schemas/mealSchemas';
 
 export async function mealsRoutes(app: FastifyInstance) {
@@ -98,6 +99,42 @@ export async function mealsRoutes(app: FastifyInstance) {
       }
 
       return res.status(204).send(sucessfulDeletionObject);
+    },
+  );
+
+  app.put(
+    '/:id',
+    {
+      preHandler: [
+        validateSchema(mealParamSchema, 'params'),
+        validateSchema(mealQuerySchema, 'query'),
+        validateSchema(updateMealBodySchema, 'body'),
+      ],
+    },
+    async (req, res) => {
+      const { id } = req.params as z.infer<typeof mealParamSchema>;
+      const { user_id: userId } = req.query as z.infer<typeof mealQuerySchema>;
+      const {
+        description,
+        is_included_on_diet: isIncludedOnDiet,
+        meal_date_time: mealDateTime,
+        name,
+      } = req.body as z.infer<typeof updateMealBodySchema>;
+
+      const updatedMealResponse = await knex('meals')
+        .where({ id, user_id: userId })
+        .update({
+          description,
+          is_included_on_diet: isIncludedOnDiet,
+          meal_date_time: mealDateTime,
+          name,
+        });
+
+      if (!updatedMealResponse) {
+        return res.status(404).send();
+      }
+
+      return res.status(204).send();
     },
   );
 }
