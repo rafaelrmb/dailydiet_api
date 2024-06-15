@@ -152,11 +152,36 @@ describe('Meals routes', () => {
         .query({ user_id: currentUser.id })
         .expect(200);
 
-      expect(summaryOfMealsResponse.body).toEqual({
-        totalNumberOfMeals: 5,
-        numberOfMealsOnDiet: 3,
-        numberOfMealsOffDiet: 2,
-      });
+      expect(summaryOfMealsResponse.body).toEqual([
+        {
+          totalNumberOfMeals: 5,
+          numberOfMealsOnDiet: 3,
+          numberOfMealsOffDiet: 2,
+        },
+      ]);
+    });
+
+    it('should return HTTP status 404 for all GET methods if not found', async () => {
+      await request(app.server)
+        .get('/meals')
+        .query({
+          user_id: currentUser.id,
+        })
+        .expect(404);
+
+      await request(app.server)
+        .get('/meals/totals')
+        .query({
+          user_id: currentUser.id,
+        })
+        .expect(404);
+
+      await request(app.server)
+        .get('/meals/streak')
+        .query({
+          user_id: currentUser.id,
+        })
+        .expect(404);
     });
   });
 
