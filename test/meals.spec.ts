@@ -24,14 +24,14 @@ async function createNewUser() {
     .expect(201);
 }
 
-async function createNewMeal() {
+async function createNewMeal(isMealIncludedOnDiet = true) {
   return await request(app.server)
     .post('/meals')
     .send({
       name: 'Test meal',
       description: 'Test meal description',
       meal_date_time: TIME_NOW,
-      is_included_on_diet: true,
+      is_included_on_diet: isMealIncludedOnDiet,
       user_id: currentUser.id,
     })
     .expect(201);
@@ -125,6 +125,19 @@ describe('Meals routes', () => {
         .get(`/meals/${id}`)
         .query({ user_id: randomUUID() })
         .expect(404);
+    });
+
+    it('should return the highest streak of meals on diet by a user', async () => {
+      await createNewMeal();
+      await createNewMeal();
+      await createNewMeal(false);
+
+      const response = await request(app.server)
+        .get('/meals/streak')
+        .query({ user_id: currentUser.id })
+        .expect(200);
+
+      expect(response.body).toEqual({ highestStreak: 2, currentStreak: 0 });
     });
   });
 
