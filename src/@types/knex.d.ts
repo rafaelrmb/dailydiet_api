@@ -7,7 +7,7 @@ declare module 'knex/types/tables' {
     user_id: string;
     description: string;
     meal_date_time: string;
-    is_included_on_diet: boolean;
+    is_included_on_diet: boolean | number;
   }
 
   interface User {

@@ -20,6 +20,5 @@ export const updateMealBodySchema = z.object({
   name: z.string().optional(),
   description: z.string().optional(),
   meal_date_time: z.string().datetime().optional(),
-  is_included_on_diet: z.boolean().optional(),
-  user_id: z.string().uuid().optional(),
+  is_included_on_diet: z.boolean().or(z.number()).optional(),
 });
