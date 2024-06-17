@@ -59,10 +59,10 @@ describe('Users routes', () => {
       );
     });
 
-    it('should return status code 403 for not found user ID', async () => {
+    it('should return status code 404 for not found user ID', async () => {
       await request(app.server)
         .get(`/users/659a897b-8b96-4752-ae22-79d4a3f05c1e`)
-        .expect(403);
+        .expect(404);
     });
   });
 
