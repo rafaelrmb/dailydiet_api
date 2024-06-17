@@ -21,7 +21,7 @@ export async function usersRoutes(app: FastifyInstance) {
     const foundUser = await knex('users').where('id', id).first();
 
     if (!foundUser) {
-      return res.status(403).send();
+      return res.status(404).send();
     }
 
     return res.status(200).send(foundUser);
